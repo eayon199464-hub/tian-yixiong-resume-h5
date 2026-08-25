@@ -159,12 +159,12 @@ const EXPERIENCES = [
 
 const UI = {
   cn: {
-    identity: "田一雄 · 数字化产品经理",
+    identity: "田一雄 / Eayon · 数字化产品经理",
     nav: ["职业路径", "能力结构", "联系"],
     motionOn: "动态 ON",
     motionOff: "动态 OFF",
     introEyebrow: "高级数字化产品经理",
-    introTitle: "田一雄 / TIAN YIXIONG",
+    introTitle: "田一雄 / EAYON",
     introBody: "SENIOR DIGITAL PRODUCT MANAGER",
     selectHint: "点击金属或年份，触发实时折射与职业章节重组",
     contribution: "关键工作",
@@ -183,12 +183,12 @@ const UI = {
     email: "邮件联系",
   },
   en: {
-    identity: "TIAN YIXIONG · DIGITAL PRODUCT",
+    identity: "EAYON · DIGITAL PRODUCT",
     nav: ["PATH", "CAPABILITIES", "CONTACT"],
     motionOn: "MOTION ON",
     motionOff: "MOTION OFF",
     introEyebrow: "SENIOR DIGITAL PRODUCT MANAGER",
-    introTitle: "TIAN YIXIONG / 田一雄",
+    introTitle: "EAYON / 田一雄",
     introBody: "AUTOMOTIVE DIGITAL PRODUCT · CRM · CX · AI",
     selectHint: "Click the metal or a year to refract and reconstruct the journey",
     contribution: "CONTRIBUTION",
