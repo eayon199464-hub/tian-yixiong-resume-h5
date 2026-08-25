@@ -3,3 +3,11 @@ dist/
 .DS_Store
 qa-motion-*.png
 qa-mobile.png
+qa-shader-*.png
+qa-shader-only-*.png
+qa-reduced-*.png
+qa-v2-desktop.png
+qa-v2-final.png
+qa-v2-refined.png
+qa-v2-stable*.png
+qa-v2-top.png

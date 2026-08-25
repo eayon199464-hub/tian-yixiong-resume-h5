@@ -5,6 +5,7 @@ const EXPERIENCES = [
     year: "2017",
     range: "2017.08—2020.07",
     company: "OGILVY",
+    displayTitle: "MERCEDES ONEWEB",
     companyCn: "奥美集团",
     role: "客户执行 / 资深客户执行",
     roleEn: "Account Executive / Senior Account Executive",
@@ -28,6 +29,7 @@ const EXPERIENCES = [
     year: "2020",
     range: "2020—2021",
     company: "INTERONE",
+    displayTitle: "BMW JOYCUBE",
     companyCn: "北京天一国际广告有限公司",
     role: "客户经理助理",
     roleEn: "Assistant Account Manager",
@@ -61,6 +63,7 @@ const EXPERIENCES = [
     year: "2021",
     range: "2021—2022",
     company: "BMW FS",
+    displayTitle: "BMW CBS",
     companyCn: "宝马金融",
     role: "数字化助理经理",
     roleEn: "Digital Assistant Manager",
@@ -84,6 +87,7 @@ const EXPERIENCES = [
     year: "2022",
     range: "2022—2024",
     company: "DAIMLER TRUCK",
+    displayTitle: "DEALER CRM",
     companyCn: "福田戴姆勒汽车 · 奔驰事业部",
     role: "产品经理",
     roleEn: "Product Manager",
@@ -107,6 +111,7 @@ const EXPERIENCES = [
     year: "2025",
     range: "2025—2026",
     company: "BYD",
+    displayTitle: "LATAM CRM",
     companyCn: "比亚迪股份有限公司",
     role: "海外产品经理",
     roleEn: "Overseas Product Manager",
@@ -130,6 +135,7 @@ const EXPERIENCES = [
     year: "2026",
     range: "2026.06—至今",
     company: "VOYAH",
+    displayTitle: "SALES ASSISTANT",
     companyCn: "岚图汽车",
     role: "数字化产品经理",
     roleEn: "Digital Product Manager",
@@ -157,10 +163,10 @@ const UI = {
     nav: ["职业路径", "能力结构", "联系"],
     motionOn: "动态 ON",
     motionOff: "动态 OFF",
-    introEyebrow: "AUTOMOTIVE · DIGITAL · PRODUCT",
-    introTitle: "把复杂业务，\n变成可被使用的产品。",
-    introBody: "8 年以上汽车及品牌数字化经验，经历覆盖品牌体验、CRM、海外产品、销售数字化与 AI 场景探索。",
-    selectHint: "点击年份，重组这段职业路径",
+    introEyebrow: "高级数字化产品经理",
+    introTitle: "田一雄 / TIAN YIXIONG",
+    introBody: "SENIOR DIGITAL PRODUCT MANAGER",
+    selectHint: "点击金属或年份，触发实时折射与职业章节重组",
     contribution: "关键工作",
     evidence: "事实与结果",
     recognition: "创意荣誉",
@@ -181,10 +187,10 @@ const UI = {
     nav: ["PATH", "CAPABILITIES", "CONTACT"],
     motionOn: "MOTION ON",
     motionOff: "MOTION OFF",
-    introEyebrow: "AUTOMOTIVE · DIGITAL · PRODUCT",
-    introTitle: "Turning complex business\ninto products people can use.",
-    introBody: "8+ years across automotive brand experience, CRM, overseas products, sales digitalization and AI exploration.",
-    selectHint: "Select a year to reconstruct the journey",
+    introEyebrow: "SENIOR DIGITAL PRODUCT MANAGER",
+    introTitle: "TIAN YIXIONG / 田一雄",
+    introBody: "AUTOMOTIVE DIGITAL PRODUCT · CRM · CX · AI",
+    selectHint: "Click the metal or a year to refract and reconstruct the journey",
     contribution: "CONTRIBUTION",
     evidence: "EVIDENCE",
     recognition: "RECOGNITION",
@@ -230,6 +236,210 @@ function MagneticLink({ children, className = "", ...props }) {
     <a ref={ref} className={`magnetic ${className}`} onPointerMove={move} onPointerLeave={reset} {...props}>
       <span>{children}</span>
     </a>
+  );
+}
+
+function LiquidMetalCanvas({ pulse, reducedMotion, scene }) {
+  const canvasRef = useRef(null);
+  const sceneRef = useRef(scene);
+  const pulseRef = useRef({ x: 0.33, y: 0.55, startedAt: -10000 });
+
+  useEffect(() => {
+    sceneRef.current = scene;
+  }, [scene]);
+
+  useEffect(() => {
+    if (!pulse || !canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    pulseRef.current = {
+      x: Math.max(0, Math.min(1, pulse.x / rect.width)),
+      y: Math.max(0, Math.min(1, 1 - pulse.y / rect.height)),
+      startedAt: performance.now(),
+    };
+  }, [pulse]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const gl = canvas?.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: false });
+    if (!gl) {
+      canvas?.classList.add("is-fallback");
+      return undefined;
+    }
+
+    const vertexSource = `
+      attribute vec2 aPosition;
+      varying vec2 vUv;
+      void main() {
+        vUv = aPosition * 0.5 + 0.5;
+        gl_Position = vec4(aPosition, 0.0, 1.0);
+      }
+    `;
+
+    const fragmentSource = `
+      precision highp float;
+      varying vec2 vUv;
+      uniform sampler2D uTexture;
+      uniform vec2 uResolution;
+      uniform vec2 uImageSize;
+      uniform vec2 uPointer;
+      uniform vec2 uClick;
+      uniform float uTime;
+      uniform float uImpulse;
+      uniform float uScene;
+
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+      }
+
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+                   mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
+
+      void main() {
+        vec2 uv = vUv;
+        float canvasAspect = uResolution.x / uResolution.y;
+        float imageAspect = uImageSize.x / uImageSize.y;
+        vec2 imageUv = uv;
+        if (canvasAspect < imageAspect) {
+          imageUv.x = (uv.x - 0.5) * (canvasAspect / imageAspect) + 0.5;
+        } else {
+          imageUv.y = (uv.y - 0.5) * (imageAspect / canvasAspect) + 0.5;
+        }
+
+        float scenePhase = uScene * 0.73;
+        float n1 = noise(imageUv * 5.0 + vec2(uTime * 0.075, -uTime * 0.05 + scenePhase));
+        float n2 = noise(imageUv * 10.0 + vec2(-uTime * 0.11, uTime * 0.065));
+        vec2 flow = vec2(
+          sin(imageUv.y * 14.0 + uTime * 0.8 + scenePhase),
+          cos(imageUv.x * 11.0 - uTime * 0.72 + scenePhase)
+        ) * (0.004 + n1 * 0.006);
+        flow += vec2(n1 - 0.5, n2 - 0.5) * 0.012;
+
+        vec2 clickDelta = uv - uClick;
+        float clickDistance = length(clickDelta);
+        float ring = sin(clickDistance * 72.0 - uImpulse * 23.0);
+        float envelope = exp(-clickDistance * 5.2) * uImpulse;
+        vec2 clickDirection = clickDelta / max(clickDistance, 0.018);
+        vec2 refraction = clickDirection * ring * envelope * 0.034;
+
+        vec2 pointerBend = (uPointer - 0.5) * 0.012 * (0.35 + n2);
+        vec2 sampleUv = imageUv + flow + refraction + pointerBend;
+        vec4 metal = texture2D(uTexture, sampleUv);
+
+        float ridge = sin((imageUv.x + imageUv.y) * 22.0 - uTime * 1.15 + n1 * 4.0);
+        float highlight = smoothstep(0.48, 1.0, ridge) * metal.a;
+        float pulseLight = smoothstep(0.22, 0.0, abs(clickDistance - uImpulse * 0.48)) * uImpulse;
+        metal.rgb = clamp(metal.rgb * (0.92 + n2 * 0.17) + highlight * 0.13 + pulseLight * vec3(0.12, 0.16, 0.22), 0.0, 1.0);
+        metal.a *= smoothstep(0.0, 0.04, metal.a);
+        gl_FragColor = metal;
+      }
+    `;
+
+    const compile = (type, source) => {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader));
+      return shader;
+    };
+
+    const program = gl.createProgram();
+    gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+    gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+    gl.useProgram(program);
+
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+    const position = gl.getAttribLocation(program, "aPosition");
+    gl.enableVertexAttribArray(position);
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+    const uniforms = {
+      resolution: gl.getUniformLocation(program, "uResolution"),
+      imageSize: gl.getUniformLocation(program, "uImageSize"),
+      pointer: gl.getUniformLocation(program, "uPointer"),
+      click: gl.getUniformLocation(program, "uClick"),
+      time: gl.getUniformLocation(program, "uTime"),
+      impulse: gl.getUniformLocation(program, "uImpulse"),
+      scene: gl.getUniformLocation(program, "uScene"),
+    };
+
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    const image = new Image();
+    let imageReady = false;
+    image.onload = () => {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+      imageReady = true;
+    };
+    image.src = "./assets/chrome-ribbon.png";
+
+    let pointer = { x: 0.5, y: 0.5 };
+    const onPointer = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      pointer = {
+        x: Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)),
+        y: Math.max(0, Math.min(1, 1 - (event.clientY - rect.top) / rect.height)),
+      };
+    };
+    window.addEventListener("pointermove", onPointer, { passive: true });
+
+    let frame;
+    let lastFrame = 0;
+    const render = (now) => {
+      frame = requestAnimationFrame(render);
+      if (reducedMotion && now - lastFrame < 240) return;
+      lastFrame = now;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+      const width = Math.max(1, Math.round(rect.width * dpr));
+      const height = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        gl.viewport(0, 0, width, height);
+      }
+      if (!imageReady) return;
+      const elapsed = Math.max(0, (now - pulseRef.current.startedAt) / 1000);
+      const impulse = reducedMotion ? 0 : Math.exp(-elapsed * 1.45) * Math.min(1, elapsed * 7.5);
+      gl.uniform2f(uniforms.resolution, width, height);
+      gl.uniform2f(uniforms.imageSize, image.naturalWidth, image.naturalHeight);
+      gl.uniform2f(uniforms.pointer, pointer.x, pointer.y);
+      gl.uniform2f(uniforms.click, pulseRef.current.x, pulseRef.current.y);
+      gl.uniform1f(uniforms.time, reducedMotion ? 0 : now / 1000);
+      gl.uniform1f(uniforms.impulse, impulse);
+      gl.uniform1f(uniforms.scene, sceneRef.current);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    };
+    frame = requestAnimationFrame(render);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", onPointer);
+      gl.deleteTexture(texture);
+      gl.deleteBuffer(buffer);
+      gl.deleteProgram(program);
+    };
+  }, [reducedMotion]);
+
+  return (
+    <div className="metal-field" aria-hidden="true">
+      <canvas ref={canvasRef} />
+      <img className="metal-fallback" src="./assets/chrome-ribbon.png" alt="" />
+    </div>
   );
 }
 
@@ -308,9 +518,7 @@ export function App() {
   return (
     <main className={`${reducedMotion ? "reduce-motion" : ""} language-${language}`}>
       <header className="topbar">
-        <a className="identity" href="#top" aria-label="返回顶部">
-          {copy.identity}
-        </a>
+        <a className="identity" href="#top" aria-label="返回顶部">{copy.identity}</a>
         <nav aria-label="页面导航">
           <a href="#path">{copy.nav[0]}</a>
           <a href="#capabilities">{copy.nav[1]}</a>
@@ -335,22 +543,24 @@ export function App() {
         aria-label="可交互职业路径"
       >
         <div className="vertical-name" aria-hidden="true">
-          <span>TIAN YIXIONG</span>
+          <span>田</span><span>一</span><span>雄</span>
         </div>
 
-        <div className="metal-field" aria-hidden="true">
-          <img className="metal metal-back" src="./assets/chrome-ribbon.png" alt="" />
-          <img className="metal metal-front" src="./assets/chrome-ribbon.png" alt="" />
-        </div>
+        <LiquidMetalCanvas pulse={pulse} reducedMotion={reducedMotion} scene={selectedIndex} />
 
         {pulse && <span key={pulse.id} className="click-pulse" style={{ left: pulse.x, top: pulse.y }} />}
 
         <div className="hero-intro">
-          <p className="eyebrow">{copy.introEyebrow}</p>
           <h1>{copy.introTitle}</h1>
+          <p className="eyebrow">{copy.introEyebrow}</p>
           <p className="hero-summary">{copy.introBody}</p>
-          <p className="interaction-hint"><span />{copy.selectHint}</p>
         </div>
+
+        <p className="interaction-hint"><span />{copy.selectHint}</p>
+        <div className="shader-status" aria-hidden="true">
+          <span>LIVE SHADER</span><span>REFRACTION 01</span><span>31.2304° N / 121.4737° E</span>
+        </div>
+        <div className="scroll-cue" aria-hidden="true">SCROLL TO EXPLORE</div>
 
         <div className="timeline" role="tablist" aria-label="职业年份">
           {EXPERIENCES.map((experience, index) => (
@@ -372,16 +582,16 @@ export function App() {
           ))}
         </div>
 
-        <article className="experience-panel" key={`${selectedIndex}-${language}`}>
+        <article className={`experience-panel ${item.awards ? "has-awards" : "no-awards"}`} key={`${selectedIndex}-${language}`}>
           <div className="panel-index">0{selectedIndex + 1}</div>
           <div className="panel-heading">
-            <p>{item.range}</p>
-            <h2>{item.company}</h2>
-            <span>{language === "cn" ? item.companyCn : item.roleEn}</span>
+            <p>{item.range} / {item.company}</p>
+            <h2>{item.displayTitle}</h2>
+            <span>{language === "cn" ? item.headline : item.headlineEn}</span>
           </div>
           <div className="panel-role">
-            <p>{language === "cn" ? item.role : item.roleEn}</p>
-            <h3>{language === "cn" ? item.headline : item.headlineEn}</h3>
+            <p>{language === "cn" ? "角色定位 / ROLE" : "ROLE / 角色定位"}</p>
+            <h3>{language === "cn" ? item.role : item.roleEn}<br /><small>{language === "cn" ? item.roleEn : item.companyCn}</small></h3>
           </div>
           <div className="panel-grid">
             <div>
