@@ -594,7 +594,10 @@ export function App() {
           ))}
         </div>
 
-        <article className={`experience-panel ${item.awards ? "has-awards" : "no-awards"}`} key={`${selectedIndex}-${language}`}>
+        <article
+          className={`experience-panel ${item.awards ? "has-awards" : "no-awards"} ${item.displayTitle.length > 12 ? "long-title" : ""}`}
+          key={`${selectedIndex}-${language}`}
+        >
           <div className="panel-index">0{selectedIndex + 1}</div>
           <div className="panel-heading">
             <p>{localizedRange(item.range, language)} / {item.company}</p>

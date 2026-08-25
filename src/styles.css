@@ -1758,6 +1758,65 @@ footer h2 {
   width: 360px;
 }
 
+.language-en .experience-panel {
+  max-height: calc(100svh - 170px);
+  padding: 24px 28px 26px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(17, 17, 15, 0.34) transparent;
+  scrollbar-width: thin;
+}
+
+.language-en .experience-panel::-webkit-scrollbar {
+  width: 5px;
+}
+
+.language-en .experience-panel::-webkit-scrollbar-thumb {
+  background: rgba(17, 17, 15, 0.28);
+}
+
+.language-en .panel-heading h2 {
+  font-size: clamp(54px, 6.4vw, 102px);
+}
+
+.language-en .experience-panel.long-title .panel-heading h2 {
+  font-size: clamp(50px, 5.6vw, 88px);
+}
+
+.language-en .panel-heading span {
+  margin-top: 13px;
+  font-size: clamp(16px, 1.55vw, 25px);
+  line-height: 1.16;
+}
+
+.language-en .panel-role {
+  margin-top: 38px;
+}
+
+.language-en .panel-role p::after {
+  margin-top: 14px;
+}
+
+.language-en .panel-role h3 {
+  margin-top: 9px;
+}
+
+.language-en .panel-grid {
+  gap: 30px;
+  padding-top: 26px;
+}
+
+.language-en .panel-grid ol li,
+.language-en .award-list li,
+.language-en .no-award {
+  line-height: 1.42;
+}
+
+.language-en .panel-grid ol li + li {
+  margin-top: 9px;
+}
+
 .language-en .capability-field em {
   display: none;
 }
@@ -1776,9 +1835,63 @@ footer h2 {
   }
 }
 
+@media (min-width: 721px) and (max-height: 980px) {
+  .experience-panel {
+    top: 128px;
+    min-height: 0;
+  }
+
+  .language-en .experience-panel {
+    max-height: calc(100svh - 148px);
+    padding: 20px 24px 22px;
+  }
+
+  .language-en .panel-heading h2 {
+    font-size: clamp(50px, 5.7vw, 84px);
+  }
+
+  .language-en .experience-panel.long-title .panel-heading h2 {
+    font-size: clamp(46px, 5vw, 74px);
+  }
+
+  .language-en .panel-heading span {
+    margin-top: 10px;
+    font-size: clamp(15px, 1.35vw, 21px);
+  }
+
+  .language-en .panel-role {
+    margin-top: 25px;
+  }
+
+  .language-en .panel-role p::after {
+    margin-top: 9px;
+  }
+
+  .language-en .panel-grid {
+    gap: 24px;
+    padding-top: 19px;
+  }
+
+  .language-en .panel-grid ol li,
+  .language-en .award-list li,
+  .language-en .no-award {
+    font-size: clamp(9px, 0.66vw, 10.5px);
+    line-height: 1.34;
+  }
+
+  .language-en .fact-list li {
+    font-size: clamp(13px, 1.05vw, 17px);
+  }
+}
+
 @media (max-width: 720px) {
   .language-en .hero-intro {
     left: 20px;
     width: calc(100% - 38px);
+  }
+
+  .language-en .experience-panel {
+    max-height: none;
+    overflow: hidden;
   }
 }
