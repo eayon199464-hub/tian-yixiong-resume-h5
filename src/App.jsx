@@ -454,6 +454,12 @@ export function App() {
   const copy = UI[language];
   const item = EXPERIENCES[selectedIndex];
 
+  useEffect(() => {
+    document.title = language === "cn"
+      ? "田一雄 Eayon｜高级数字化产品经理"
+      : "Eayon | Senior Digital Product Manager";
+  }, [language]);
+
   const selectExperience = useCallback(
     (index, point) => {
       const target = (index + EXPERIENCES.length) % EXPERIENCES.length;
