@@ -1381,9 +1381,8 @@ footer h2 {
 }
 
 .panel-role {
-  display: grid;
-  grid-template-columns: 0.88fr 1.4fr;
-  gap: 34px;
+  display: block;
+  width: 58%;
   margin-top: 54px;
   padding: 0;
   border: 0;
@@ -1406,7 +1405,7 @@ footer h2 {
 }
 
 .panel-role h3 {
-  margin: 0;
+  margin: 12px 0 0;
   font-size: clamp(17px, 1.55vw, 24px);
   line-height: 1.25;
 }
@@ -1420,9 +1419,9 @@ footer h2 {
 
 .panel-grid {
   display: grid;
-  grid-template-columns: 1.25fr 0.9fr;
-  gap: 42px;
-  margin-left: calc(36.5% + 13px);
+  grid-template-columns: minmax(0, 1.35fr) minmax(180px, 0.9fr);
+  gap: 36px;
+  margin-left: 0;
   padding-top: 34px;
 }
 
@@ -1601,6 +1600,15 @@ footer h2 {
     font-size: 74px;
   }
 
+  .panel-role {
+    width: 62%;
+  }
+
+  .panel-grid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(170px, 0.9fr);
+    gap: 28px;
+  }
+
   .timeline {
     left: 18px;
     width: 44vw;
@@ -1671,6 +1679,7 @@ footer h2 {
 
   .panel-role {
     display: block;
+    width: auto;
     margin-top: 24px;
   }
 
