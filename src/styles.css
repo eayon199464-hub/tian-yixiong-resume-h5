@@ -1294,11 +1294,17 @@ footer h2 {
 .hero-intro {
   position: absolute;
   z-index: 14;
-  top: 26px;
+  top: 18px;
   left: clamp(220px, 17vw, 264px);
-  width: 390px;
+  width: 420px;
   max-width: none;
-  padding: 0;
+  padding: 14px 16px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  background: linear-gradient(135deg, rgba(250, 248, 242, 0.72), rgba(243, 239, 230, 0.46));
+  box-shadow: 0 18px 46px rgba(17, 17, 15, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px) saturate(0.78);
+  -webkit-backdrop-filter: blur(18px) saturate(0.78);
+  clip-path: polygon(4% 0, 100% 0, 100% 100%, 0 100%, 0 18%);
 }
 
 .hero-intro h1 {
@@ -1339,12 +1345,14 @@ footer h2 {
   width: min(48vw, 760px);
   min-height: 540px;
   margin: 0;
-  padding: 0;
-  overflow: visible;
-  border: 0;
-  background: transparent;
-  backdrop-filter: none;
-  clip-path: none;
+  padding: 28px 30px 30px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: linear-gradient(135deg, rgba(250, 248, 242, 0.76), rgba(243, 239, 230, 0.5));
+  box-shadow: 0 24px 70px rgba(17, 17, 15, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(22px) saturate(0.72);
+  -webkit-backdrop-filter: blur(22px) saturate(0.72);
+  clip-path: polygon(2.2% 0, 100% 0, 100% 100%, 0 100%, 0 4%);
   animation: metal-content-enter 580ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -1646,6 +1654,7 @@ footer h2 {
     top: 76px;
     left: 20px;
     width: calc(100% - 38px);
+    padding: 12px 14px 14px;
   }
 
   .hero-intro h1 {
@@ -1664,8 +1673,10 @@ footer h2 {
     width: auto;
     min-height: 610px;
     padding: 22px 18px 70px;
-    background: rgba(243, 239, 230, 0.82);
-    backdrop-filter: blur(14px);
+    border-color: rgba(255, 255, 255, 0.66);
+    background: linear-gradient(135deg, rgba(250, 248, 242, 0.86), rgba(243, 239, 230, 0.72));
+    backdrop-filter: blur(18px) saturate(0.78);
+    -webkit-backdrop-filter: blur(18px) saturate(0.78);
   }
 
   .panel-heading h2 {
@@ -1724,5 +1735,50 @@ footer h2 {
 
   .next-chapter {
     display: flex;
+  }
+}
+
+.language-en .vertical-name {
+  width: clamp(92px, 8vw, 124px);
+  padding-top: 30px;
+}
+
+.language-en .vertical-name .vertical-latin {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: clamp(48px, 5.5vw, 78px);
+  font-weight: 900;
+  letter-spacing: -0.08em;
+  line-height: 0.86;
+}
+
+.language-en .hero-intro {
+  left: clamp(154px, 11vw, 176px);
+  width: 360px;
+}
+
+.language-en .capability-field em {
+  display: none;
+}
+
+.language-en .panel-grid h4::after {
+  display: none;
+}
+
+.language-en .capability-field strong {
+  margin-top: 68px;
+}
+
+@media (max-width: 1040px) {
+  .language-en .hero-intro {
+    left: 132px;
+  }
+}
+
+@media (max-width: 720px) {
+  .language-en .hero-intro {
+    left: 20px;
+    width: calc(100% - 38px);
   }
 }

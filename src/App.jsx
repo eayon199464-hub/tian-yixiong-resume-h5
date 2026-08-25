@@ -188,7 +188,7 @@ const UI = {
     motionOn: "MOTION ON",
     motionOff: "MOTION OFF",
     introEyebrow: "SENIOR DIGITAL PRODUCT MANAGER",
-    introTitle: "EAYON / 田一雄",
+    introTitle: "EAYON",
     introBody: "AUTOMOTIVE DIGITAL PRODUCT · CRM · CX · AI",
     selectHint: "Click the metal or a year to refract and reconstruct the journey",
     contribution: "CONTRIBUTION",
@@ -203,7 +203,7 @@ const UI = {
     capabilityBody: "My edge is not a single tool. It is connecting users, business and execution inside complex organizations.",
     contactEyebrow: "03 / AVAILABLE FOR THE RIGHT ROLE",
     contactTitle: "Next: building automotive digital products with greater impact.",
-    download: "DOWNLOAD CV",
+    download: "DOWNLOAD CHINESE CV",
     email: "EMAIL ME",
   },
 };
@@ -218,6 +218,8 @@ const CAPABILITIES = [
   ["OVERSEAS COLLABORATION", "海外产品协作"],
   ["AI WORKFLOW", "AI 产品与工作流"],
 ];
+
+const localizedRange = (range, language) => language === "cn" ? range : range.replace("至今", "Present");
 
 function MagneticLink({ children, className = "", ...props }) {
   const ref = useRef(null);
@@ -526,7 +528,7 @@ export function App() {
         </nav>
         <div className="top-actions">
           <button type="button" onClick={() => setLanguage(language === "cn" ? "en" : "cn")} aria-label="切换语言">
-            {language === "cn" ? "EN" : "中"}
+            {language === "cn" ? "EN" : "CN"}
           </button>
           <button type="button" onClick={() => setReducedMotion((value) => !value)} aria-pressed={reducedMotion}>
             {reducedMotion ? copy.motionOff : copy.motionOn}
@@ -543,7 +545,11 @@ export function App() {
         aria-label="可交互职业路径"
       >
         <div className="vertical-name" aria-hidden="true">
-          <span>田</span><span>一</span><span>雄</span>
+          {language === "cn" ? (
+            <><span>田</span><span>一</span><span>雄</span></>
+          ) : (
+            <span className="vertical-latin">EAYON</span>
+          )}
         </div>
 
         <LiquidMetalCanvas pulse={pulse} reducedMotion={reducedMotion} scene={selectedIndex} />
@@ -585,13 +591,16 @@ export function App() {
         <article className={`experience-panel ${item.awards ? "has-awards" : "no-awards"}`} key={`${selectedIndex}-${language}`}>
           <div className="panel-index">0{selectedIndex + 1}</div>
           <div className="panel-heading">
-            <p>{item.range} / {item.company}</p>
+            <p>{localizedRange(item.range, language)} / {item.company}</p>
             <h2>{item.displayTitle}</h2>
             <span>{language === "cn" ? item.headline : item.headlineEn}</span>
           </div>
           <div className="panel-role">
-            <p>{language === "cn" ? "角色定位 / ROLE" : "ROLE / 角色定位"}</p>
-            <h3>{language === "cn" ? item.role : item.roleEn}<br /><small>{language === "cn" ? item.roleEn : item.companyCn}</small></h3>
+            <p>{language === "cn" ? "角色定位 / ROLE" : "ROLE"}</p>
+            <h3>
+              {language === "cn" ? item.role : item.roleEn}
+              {language === "cn" && <><br /><small>{item.roleEn}</small></>}
+            </h3>
           </div>
           <div className="panel-grid">
             <div>
@@ -634,7 +643,7 @@ export function App() {
             <button key={experience.company} type="button" onClick={() => { selectExperience(index); window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" }); }}>
               <span>0{index + 1}</span>
               <strong>{experience.company}</strong>
-              <em>{experience.range}</em>
+              <em>{localizedRange(experience.range, language)}</em>
               <p>{language === "cn" ? experience.headline : experience.headlineEn}</p>
               <b>↗</b>
             </button>
@@ -667,7 +676,7 @@ export function App() {
           <MagneticLink className="outline" href="./田一雄_高级数字化产品经理_中文简历.docx" download>{copy.download}</MagneticLink>
         </div>
         <div className="footer-meta">
-          <span>TYX / 2026</span>
+          <span>EAYON / 2026</span>
           <span>133 8331 0003</span>
           <span>tyx553269537@163.com</span>
         </div>
