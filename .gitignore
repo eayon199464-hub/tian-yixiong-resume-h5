@@ -17,3 +17,6 @@ qa-current-misalignment.jpg
 qa-fixed-*.jpg
 qa-glass-*.jpg
 qa-en-*.jpg
+audit-liquid-metal/
+qa-sdf/
+qa-compare.html

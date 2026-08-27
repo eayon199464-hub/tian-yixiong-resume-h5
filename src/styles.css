@@ -1278,8 +1278,8 @@ footer h2 {
 }
 
 .metal-field canvas {
-  opacity: 0.95;
-  filter: contrast(1.08) brightness(1.04);
+  opacity: 0.98;
+  filter: none;
 }
 
 .metal-fallback {
@@ -1663,7 +1663,7 @@ footer h2 {
   }
 
   .metal-field canvas {
-    opacity: 0.82;
+    opacity: 0.94;
   }
 
   .experience-panel {

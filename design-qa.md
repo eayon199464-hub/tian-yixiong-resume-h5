@@ -1,70 +1,72 @@
-# Design QA — WebGL Liquid Metal Revision
+# Design QA — SDF Procedural Liquid Metal
 
-## Comparison target
+## Comparison Target
 
-- Source visual truth: `/Users/eayon/.codex/generated_images/019fb12c-c216-7900-9077-9c120e9827c4/exec-93eb1613-3371-4771-be29-515150c26bb0.png`
-- Project copy: `design-reference-selected.png`
-- Implementation screenshot: `qa-v2-comparison-impl.png`
-- Full-view comparison: `qa-v2-comparison.png`
-- Focused content comparison: `qa-v2-focus.png`
-- Motion evidence: `interaction-preview-v2.gif`
-- Mobile evidence: `qa-v2-mobile.png`
+- Source visual truth (PC): `audit-liquid-metal/01-pc-liquid-metal.png`
+- Source visual truth (mobile): `audit-liquid-metal/02-mobile-liquid-metal.png`
+- Final implementation (PC): `qa-sdf/08-final-pc.png`
+- Final implementation (mobile): `qa-sdf/07-sdf-mobile.png`
+- Full before/after comparison: `qa-sdf/11-final-comparison.jpg`
+- Focused edge comparison: `qa-sdf/10-edge-focus-comparison.jpg`
 
 ## Normalization
 
-- Source pixels: 1536 × 1024.
-- Implementation pixels: 1536 × 1024.
-- Browser CSS viewport: 1536 × 1024.
-- Effective capture density: 1×.
-- State: Chinese, 2020–2021 INTERONE / BMW JOYCUBE selected, warm-paper theme.
-- Source and implementation were compared at equal crop, equal pixels and equal interaction state.
+- PC source and implementation: 1440 × 900 pixels, 1440 × 900 CSS viewport, device scale factor 1.
+- Mobile source and implementation: 393 × 852 pixels, 393 × 852 CSS viewport, device scale factor 1.
+- State: Chinese, 2020 INTERONE selected, motion enabled, first viewport at scroll position 0.
+- Both comparisons use the same content, crop, viewport, background and selected chapter.
 
-## Findings
+## Full-view Comparison
 
-- No remaining P0, P1 or P2 findings.
-- Typography: the implementation restores the source hierarchy — oversized vertical Chinese name, compact identity lockup, condensed all-caps project title, small bilingual labels and dense editorial body copy. The selected free web/system fonts are not the source's unknown commercial font, which remains a P3 optical difference.
-- Spacing and layout: the first screen again uses one continuous metal-enclosed composition. The timeline occupies the left metal lobe and the role/contribution/award content sits inside the right cavity. The previous detached right-hand card is gone.
-- Colors and tokens: warm paper, black, orange active state and blue technical marker match the source visual grammar.
-- Image and material quality: the chrome asset remains a generated source asset, but it is now sampled by a live WebGL fragment shader. Time, pointer and click uniforms drive localized UV displacement, refraction rings and moving specular highlights. It is not moved as a flat DOM image.
-- Copy and content: `BMW JOYCUBE` is restored as the selected project title. Role and award copy intentionally differs from the concept image where necessary to preserve factual resume accuracy.
-- Responsive behavior: 390 × 844 has no horizontal overflow (`scrollWidth = viewport width = 390`) and retains the WebGL canvas. The vertical name is intentionally removed on mobile to prevent collision with the profile lockup.
+- The editorial layout, typography, content hierarchy, timeline, glass panels and warm-paper palette remain aligned with the source.
+- The metal silhouette and its relationship to the panel and timeline remain recognizable.
+- The implementation intentionally replaces the source's detailed raster chrome with broader procedural reflections. This is the requested rendering change rather than accidental layout drift.
+- PC and mobile retain the same responsive composition with no horizontal overflow.
 
-## Focused-region evidence
+## Focused Edge Comparison
 
-- `qa-v2-focus.png` compares the project title, role block, contribution column, award column and enclosing chrome boundary at equal scale.
-- The implementation preserves the source's large-title-to-small-metadata contrast and uses the metal cavity as the information container rather than adding a card surface.
+- The previous transparent-PNG implementation shows a light contaminated fringe along the outer contour and inner openings.
+- The final implementation uses SDF coverage and premultiplied output. Outer contours and openings transition directly into the page background without the previous white halo.
+- A subtle dark metallic rim remains as intentional surface shading; it does not expose transparent white pixels.
 
-## Interaction and rendering QA
+## Required Fidelity Surfaces
 
-- Continuous rendering: passed; metal pixels change between idle frames through shader time/noise uniforms.
-- Click response: passed; clicking the metal or timeline sends a normalized click origin to the fragment shader and produces an expanding localized refraction wave.
-- Content reconstruction: passed; chapter content and project title change with the selected timeline year.
-- Pointer response: passed; pointer position bends the sampling field without moving the canvas element.
-- Reduced motion: passed; two frames captured 550 ms apart in reduced-motion mode had a pixel-difference score of `0.0`.
-- Keyboard selection: retained; arrow keys and number keys 1–6 switch chapters.
-- Console warnings/errors: none.
-- Build and worker tests: passed.
+- Fonts and typography: unchanged from the source implementation; weights, wrapping and hierarchy remain stable on PC and mobile.
+- Spacing and layout rhythm: unchanged; hero, panel, timeline and controls preserve the existing grid and responsive breakpoints.
+- Colors and visual tokens: paper, ink, orange, blue and glass tokens are unchanged. Procedural chrome stays neutral silver/black with warm reflected highlights.
+- Image quality and asset fidelity: the full-color PNG is no longer sampled as visible color. Its alpha is converted once into an SDF mask; the shader supplies all visible metal color and reflection. White alpha fringing is removed.
+- Copy and content: unchanged.
 
-## Comparison history
+## Interaction and Runtime Checks
 
-### Iteration 1 — blocked
+- Year selection: selecting 2025 BYD updates the selected tab and scene to `4`.
+- Click response: the click origin produces a temporary ripple/refraction and highlight response in the procedural normals.
+- Motion control: `动态 ON` toggles to `动态 OFF` and returns to `动态 ON`.
+- Mobile reflow: verified at 393 × 852 with zero horizontal page overflow.
+- WebGL fallback class was not triggered in the tested browser.
+- Console: no warnings or errors in the final PC capture.
+- Build and Sites worker tests pass.
 
-- [P1] Composition drift: the implementation used a marketing headline on the left and a detached translucent content card on the right, while the source used a single metal-enclosed career composition.
-- [P1] Material behavior drift: two PNG layers were only translated, scaled and filtered with CSS; the metal surface itself did not deform.
-- [P2] Selected project mismatch: the source centered `BMW JOYCUBE`, while the implementation centered the employer name `INTERONE`.
+## Comparison History
 
-### Iteration 2 — fixed
+1. Initial SDF pass — `qa-sdf/01-sdf-pc.jpg`
+   - Finding: P1 serrated/high-frequency specular edge caused by a chamfer distance field and high-gain edge normals.
+   - Fix: replaced the chamfer field with a two-pass Euclidean distance transform and added five-tap SDF smoothing.
 
-- Rebuilt the hero around the source's vertical name, identity lockup, left-lobe timeline and right-cavity project layout.
-- Replaced the two DOM image layers with a WebGL canvas and fragment shader using procedural flow, click-origin ripples, localized refraction and animated specular response.
-- Added factual per-experience project titles, with `BMW JOYCUBE` for the selected INTERONE chapter.
-- Removed the detached card treatment and revalidated desktop, mobile, click, continuous motion and reduced-motion states.
+2. Smoothed edge passes — `qa-sdf/02-sdf-pc-smoothed.jpg` and `qa-sdf/03-sdf-pc-clean-edge.jpg`
+   - Finding: P2 bright double-outline around the silhouette and inner openings.
+   - Fix: removed direct high-gain SDF-gradient lighting, tightened SDF coverage and removed the artificial inner highlight rim.
 
-## Follow-up polish
+3. Clean but flat pass — `qa-sdf/04-sdf-pc-no-halo.jpg`
+   - Finding: P2 procedural reflection appeared too flat and repetitive compared with the liquid-metal target.
+   - Fix: introduced broad low-frequency environment bands, macro and micro normal waves, and a low-strength wide-kernel bevel.
 
-- P3: a licensed display typeface closer to the concept could narrow the remaining letterform difference.
-- P3: a purpose-built 3D mesh exported from Blender would allow true silhouette deformation and camera parallax beyond the current pixel-space shader refraction.
+4. Final pass — `qa-sdf/08-final-pc.png` and `qa-sdf/07-sdf-mobile.png`
+   - Result: no actionable P0/P1/P2 findings remain. Layout is preserved, the metal reads as reflective, interactions work, and the white alpha fringe is removed.
 
-## Final result
+## Follow-up Polish
 
-passed
+- P3: the procedural chrome is intentionally smoother and less optically intricate than the original raster render. A future art-direction pass could add a restrained secondary environment reflection without changing the SDF edge pipeline.
+- Real-device Safari/Android GPU frame pacing and thermal behavior still require physical-device testing.
+
+final result: passed

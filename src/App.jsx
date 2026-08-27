@@ -241,6 +241,99 @@ function MagneticLink({ children, className = "", ...props }) {
   );
 }
 
+function distanceTransform1D(source, length, output, sites, boundaries) {
+  let envelopeIndex = 0;
+  sites[0] = 0;
+  boundaries[0] = -1e20;
+  boundaries[1] = 1e20;
+
+  for (let point = 1; point < length; point += 1) {
+    let site = sites[envelopeIndex];
+    let separation = ((source[point] + point * point) - (source[site] + site * site)) / (2 * (point - site));
+    while (separation <= boundaries[envelopeIndex] && envelopeIndex > 0) {
+      envelopeIndex -= 1;
+      site = sites[envelopeIndex];
+      separation = ((source[point] + point * point) - (source[site] + site * site)) / (2 * (point - site));
+    }
+    envelopeIndex += 1;
+    sites[envelopeIndex] = point;
+    boundaries[envelopeIndex] = separation;
+    boundaries[envelopeIndex + 1] = 1e20;
+  }
+
+  envelopeIndex = 0;
+  for (let point = 0; point < length; point += 1) {
+    while (boundaries[envelopeIndex + 1] < point) envelopeIndex += 1;
+    const delta = point - sites[envelopeIndex];
+    output[point] = delta * delta + source[sites[envelopeIndex]];
+  }
+}
+
+function euclideanDistance(binary, width, height, target) {
+  const infinity = 1e10;
+  const intermediate = new Float32Array(width * height);
+  const squaredDistance = new Float32Array(width * height);
+  const maxLength = Math.max(width, height);
+  const source = new Float32Array(maxLength);
+  const output = new Float32Array(maxLength);
+  const sites = new Int32Array(maxLength);
+  const boundaries = new Float32Array(maxLength + 1);
+
+  for (let y = 0; y < height; y += 1) {
+    const rowStart = y * width;
+    for (let x = 0; x < width; x += 1) {
+      source[x] = binary[rowStart + x] === target ? 0 : infinity;
+    }
+    distanceTransform1D(source, width, output, sites, boundaries);
+    for (let x = 0; x < width; x += 1) intermediate[rowStart + x] = output[x];
+  }
+
+  for (let x = 0; x < width; x += 1) {
+    for (let y = 0; y < height; y += 1) source[y] = intermediate[y * width + x];
+    distanceTransform1D(source, height, output, sites, boundaries);
+    for (let y = 0; y < height; y += 1) squaredDistance[y * width + x] = Math.sqrt(output[y]);
+  }
+
+  return squaredDistance;
+}
+
+function createSignedDistanceMask(image, maxWidth = 1024) {
+  const scale = Math.min(1, maxWidth / image.naturalWidth);
+  const width = Math.max(1, Math.round(image.naturalWidth * scale));
+  const height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const maskCanvas = document.createElement("canvas");
+  maskCanvas.width = width;
+  maskCanvas.height = height;
+  const context = maskCanvas.getContext("2d", { willReadFrequently: true });
+  context.clearRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+
+  const pixels = context.getImageData(0, 0, width, height).data;
+  const binary = new Uint8Array(width * height);
+  for (let index = 0; index < binary.length; index += 1) {
+    binary[index] = pixels[index * 4 + 3] >= 112 ? 1 : 0;
+  }
+
+  const distanceToInside = euclideanDistance(binary, width, height, 1);
+  const distanceToOutside = euclideanDistance(binary, width, height, 0);
+  const spread = Math.max(14, Math.round(width / 58));
+  const sdf = new Uint8Array(width * height);
+
+  for (let index = 0; index < sdf.length; index += 1) {
+    const signedDistance = distanceToOutside[index] - distanceToInside[index];
+    const encoded = 0.5 + signedDistance / (spread * 2);
+    sdf[index] = Math.max(0, Math.min(255, Math.round(encoded * 255)));
+  }
+
+  const flippedSdf = new Uint8Array(sdf.length);
+  for (let y = 0; y < height; y += 1) {
+    const sourceStart = (height - 1 - y) * width;
+    flippedSdf.set(sdf.subarray(sourceStart, sourceStart + width), y * width);
+  }
+
+  return { data: flippedSdf, width, height };
+}
+
 function LiquidMetalCanvas({ pulse, reducedMotion, scene }) {
   const canvasRef = useRef(null);
   const sceneRef = useRef(scene);
@@ -262,7 +355,7 @@ function LiquidMetalCanvas({ pulse, reducedMotion, scene }) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const gl = canvas?.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: false });
+    const gl = canvas?.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: true });
     if (!gl) {
       canvas?.classList.add("is-fallback");
       return undefined;
@@ -280,9 +373,9 @@ function LiquidMetalCanvas({ pulse, reducedMotion, scene }) {
     const fragmentSource = `
       precision highp float;
       varying vec2 vUv;
-      uniform sampler2D uTexture;
+      uniform sampler2D uMask;
       uniform vec2 uResolution;
-      uniform vec2 uImageSize;
+      uniform vec2 uMaskSize;
       uniform vec2 uPointer;
       uniform vec2 uClick;
       uniform float uTime;
@@ -301,10 +394,48 @@ function LiquidMetalCanvas({ pulse, reducedMotion, scene }) {
                    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
       }
 
+      float maskDistance(vec2 uv) {
+        return texture2D(uMask, uv).r;
+      }
+
+      float smoothMaskDistance(vec2 uv) {
+        vec2 texel = 1.0 / uMaskSize;
+        float center = maskDistance(uv) * 4.0;
+        center += maskDistance(uv + vec2(texel.x * 1.5, 0.0));
+        center += maskDistance(uv - vec2(texel.x * 1.5, 0.0));
+        center += maskDistance(uv + vec2(0.0, texel.y * 1.5));
+        center += maskDistance(uv - vec2(0.0, texel.y * 1.5));
+        return center * 0.125;
+      }
+
+      vec3 chromeEnvironment(vec3 ray, float phase) {
+        vec3 paper = vec3(0.965, 0.95, 0.91);
+        vec3 silver = vec3(0.54, 0.57, 0.60);
+        vec3 ink = vec3(0.012, 0.014, 0.018);
+        float horizon = smoothstep(-0.65, 0.38, ray.y);
+        vec3 color = mix(ink, silver, horizon);
+
+        float whiteBand = exp(-pow((ray.y - 0.20) * 7.5, 2.0));
+        float upperBand = exp(-pow((ray.y - 0.72) * 12.0, 2.0));
+        float darkBand = exp(-pow((ray.y + 0.12) * 10.0, 2.0));
+        float movingBand = 0.5 + 0.5 * sin(ray.x * 6.2 + ray.y * 7.4 + phase);
+        float movingHighlight = smoothstep(0.82, 0.99, movingBand);
+        float movingShadow = 1.0 - smoothstep(0.08, 0.28, movingBand);
+        float fineBand = smoothstep(0.88, 1.0, 0.5 + 0.5 * sin(ray.x * 19.0 - ray.y * 11.0 - phase * 0.7));
+
+        color = mix(color, paper, whiteBand * 0.92);
+        color += paper * upperBand * 0.78;
+        color = mix(color, ink, darkBand * 0.86);
+        color = mix(color, paper, movingHighlight * 0.68);
+        color = mix(color, ink, movingShadow * 0.50);
+        color += paper * fineBand * 0.18;
+        return clamp(color, 0.0, 1.0);
+      }
+
       void main() {
         vec2 uv = vUv;
         float canvasAspect = uResolution.x / uResolution.y;
-        float imageAspect = uImageSize.x / uImageSize.y;
+        float imageAspect = uMaskSize.x / uMaskSize.y;
         vec2 imageUv = uv;
         if (canvasAspect < imageAspect) {
           imageUv.x = (uv.x - 0.5) * (canvasAspect / imageAspect) + 0.5;
@@ -330,14 +461,53 @@ function LiquidMetalCanvas({ pulse, reducedMotion, scene }) {
 
         vec2 pointerBend = (uPointer - 0.5) * 0.012 * (0.35 + n2);
         vec2 sampleUv = imageUv + flow + refraction + pointerBend;
-        vec4 metal = texture2D(uTexture, sampleUv);
+        float signedMask = smoothMaskDistance(sampleUv);
+        float alpha = smoothstep(0.505, 0.54, signedMask);
+
+        vec2 liquidNormal = vec2(
+          sin(imageUv.y * 8.0 + imageUv.x * 2.2 + uTime * 0.72 + scenePhase) + (n1 - 0.5) * 1.4,
+          cos(imageUv.x * 7.0 - imageUv.y * 1.8 - uTime * 0.64 + scenePhase) + (n2 - 0.5) * 1.35
+        ) * 0.28;
+        liquidNormal += vec2(
+          sin((imageUv.x + imageUv.y) * 28.0 - uTime * 0.9),
+          cos((imageUv.x - imageUv.y) * 24.0 + uTime * 0.82)
+        ) * 0.035;
+        float rippleNormal = cos(clickDistance * 72.0 - uImpulse * 23.0) * envelope;
+        liquidNormal += clickDirection * rippleNormal * 0.55;
+
+        vec2 wideTexel = 6.0 / uMaskSize;
+        vec2 edgeGradient = vec2(
+          smoothMaskDistance(sampleUv + vec2(wideTexel.x, 0.0)) - smoothMaskDistance(sampleUv - vec2(wideTexel.x, 0.0)),
+          smoothMaskDistance(sampleUv + vec2(0.0, wideTexel.y)) - smoothMaskDistance(sampleUv - vec2(0.0, wideTexel.y))
+        );
+        float edgeStrength = length(edgeGradient);
+        vec2 edgeDirection = edgeGradient / max(edgeStrength, 0.0001);
+        float bevel = (1.0 - smoothstep(0.55, 0.76, signedMask)) * smoothstep(0.505, 0.55, signedMask);
+        liquidNormal -= edgeDirection * bevel * 0.18;
+
+        vec3 normal = normalize(vec3(
+          liquidNormal.x,
+          liquidNormal.y,
+          1.0
+        ));
+        vec2 centered = (uv - 0.5) * vec2(canvasAspect, 1.0);
+        vec3 viewDirection = normalize(vec3(centered * 0.32, 1.22));
+        vec3 reflected = reflect(-viewDirection, normal);
+        vec3 metal = chromeEnvironment(reflected, scenePhase + uTime * 0.18);
 
         float ridge = sin((imageUv.x + imageUv.y) * 22.0 - uTime * 1.15 + n1 * 4.0);
-        float highlight = smoothstep(0.48, 1.0, ridge) * metal.a;
+        float highlight = smoothstep(0.48, 1.0, ridge) * alpha;
         float pulseLight = smoothstep(0.22, 0.0, abs(clickDistance - uImpulse * 0.48)) * uImpulse;
-        metal.rgb = clamp(metal.rgb * (0.92 + n2 * 0.17) + highlight * 0.13 + pulseLight * vec3(0.12, 0.16, 0.22), 0.0, 1.0);
-        metal.a *= smoothstep(0.0, 0.04, metal.a);
-        gl_FragColor = metal;
+        float fresnel = pow(1.0 - max(dot(normal, viewDirection), 0.0), 3.0);
+        metal = clamp(
+          metal * (0.88 + n2 * 0.18)
+          + highlight * 0.10
+          + fresnel * vec3(0.08, 0.09, 0.11)
+          + pulseLight * vec3(0.12, 0.16, 0.23),
+          0.0,
+          1.0
+        );
+        gl_FragColor = vec4(metal * alpha, alpha);
       }
     `;
 
@@ -365,7 +535,7 @@ function LiquidMetalCanvas({ pulse, reducedMotion, scene }) {
 
     const uniforms = {
       resolution: gl.getUniformLocation(program, "uResolution"),
-      imageSize: gl.getUniformLocation(program, "uImageSize"),
+      maskSize: gl.getUniformLocation(program, "uMaskSize"),
       pointer: gl.getUniformLocation(program, "uPointer"),
       click: gl.getUniformLocation(program, "uClick"),
       time: gl.getUniformLocation(program, "uTime"),
@@ -373,19 +543,23 @@ function LiquidMetalCanvas({ pulse, reducedMotion, scene }) {
       scene: gl.getUniformLocation(program, "uScene"),
     };
 
-    const texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
+    const maskTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, maskTexture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     const image = new Image();
-    let imageReady = false;
+    let maskReady = false;
+    let maskSize = { width: 1, height: 1 };
     image.onload = () => {
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-      imageReady = true;
+      const maskStartedAt = performance.now();
+      const mask = createSignedDistanceMask(image);
+      canvas.dataset.sdfBuildMs = (performance.now() - maskStartedAt).toFixed(1);
+      maskSize = { width: mask.width, height: mask.height };
+      gl.bindTexture(gl.TEXTURE_2D, maskTexture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, mask.width, mask.height, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, mask.data);
+      maskReady = true;
     };
     image.src = "./assets/chrome-ribbon.png";
 
@@ -414,11 +588,11 @@ function LiquidMetalCanvas({ pulse, reducedMotion, scene }) {
         canvas.height = height;
         gl.viewport(0, 0, width, height);
       }
-      if (!imageReady) return;
+      if (!maskReady) return;
       const elapsed = Math.max(0, (now - pulseRef.current.startedAt) / 1000);
       const impulse = reducedMotion ? 0 : Math.exp(-elapsed * 1.45) * Math.min(1, elapsed * 7.5);
       gl.uniform2f(uniforms.resolution, width, height);
-      gl.uniform2f(uniforms.imageSize, image.naturalWidth, image.naturalHeight);
+      gl.uniform2f(uniforms.maskSize, maskSize.width, maskSize.height);
       gl.uniform2f(uniforms.pointer, pointer.x, pointer.y);
       gl.uniform2f(uniforms.click, pulseRef.current.x, pulseRef.current.y);
       gl.uniform1f(uniforms.time, reducedMotion ? 0 : now / 1000);
@@ -431,7 +605,7 @@ function LiquidMetalCanvas({ pulse, reducedMotion, scene }) {
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", onPointer);
-      gl.deleteTexture(texture);
+      gl.deleteTexture(maskTexture);
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);
     };

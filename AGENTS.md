@@ -14,3 +14,4 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Interaction is a core requirement. Clicking a career year must materially transform the composition: the chrome ribbon morphs, adjacent years compress, and the selected project content grows from the click origin with masked text entry.
 - Scroll should drive continuous motion between career chapters. Include strong hover/click feedback, keyboard navigation, and a visible reduced-motion control.
 - Preserve factual resume content. The visual mock is design reference only and must not be treated as a factual source for dates, roles, awards, or metrics.
+- Render the hero ribbon from an independent mask/SDF and a procedural chrome shader. Do not return to distorting a full-color transparent PNG; PC and mobile must avoid white alpha fringes while preserving click refraction and reduced-motion behavior.
